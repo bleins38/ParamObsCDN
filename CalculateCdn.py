@@ -8,9 +8,11 @@ sys.path.append('/home/bleins/ASET/meteolib')
 sys.path.append('/home/bleins/ASET/CDlib')
 sys.path.append('/home/bleins/ASET/SCRIPT')
 
-from readlib import shebatower, shebatowergather, shebapam, shebaaircraft
+from readlib import shebatower, shebatowergather, shebapam
 from CDlib import *
 from meteolib import *
+import Interp_Ai_from_Aircraft
+
 
 K0 = 273.15
 sites=['Atlanta','Cleveland-Seattle-Maui','Baltimore','Florida']
@@ -23,8 +25,10 @@ def CalculateCdnSheeba(site=None,time_period=None,vmask=None,sub_CDN_skin=None):
         z = xarr.z.data
         #
         P = np.tile(xarr.Press.data*1.E2,(nlev,1)).transpose()
+        #P = np.tile(xarr.Press.data,(nlev,1)).transpose()
         #Do we compensate the pressure between different mast levels? Here it is constant.
         rho = P/(287.058 *(xarr.T.data+K0))
+        #rho = RHO(P=P,T=xarr.T.data+K0,q=xarr.q.data*1.E-3)
         #
         ustar = xarr.ustar.data
         #
@@ -55,13 +59,14 @@ def CalculateCdnSheeba(site=None,time_period=None,vmask=None,sub_CDN_skin=None):
         z = xarr.Z_sonic_meas.data
         #
         tau = xarr.uflux.data
+        q = Q(P=xarr.P.data*1.E2,rh=xarr.RH_ice.data,T=xarr.T.data+K0)
         # Check where is measured the pressure P?
         rho = xarr.P.data*1.E2 / (287.058 *(xarr.T.data+K0))
+        #rho = RHO(P=xarr.P.data*1.E2,T=xarr.T.data+K0,q=q)
         ustar = (tau / rho)**0.5
         #ustar = (xarr.u_v.data**2+xarr.u_w.data**2)**0.25
         #
         theta = Theta(z=z,T=xarr.T.data+K0)
-        q = Q(P=xarr.P.data*1.E2,rh=xarr.RH_ice.data,T=xarr.T.data+K0)
         thetav = Thetav(theta,q)
         wthv = xarr.w_tc.data
         #
@@ -149,61 +154,20 @@ def CalculateCdnSheeba(site=None,time_period=None,vmask=None,sub_CDN_skin=None):
         M +=1
 
     if time_period == 'Aero_Summer':
-        ###################################################################
-        # Read aircraft data (ice concentration) from Perovich et al. 2002
-        ###################################################################
-        xa_aircraft = shebaaircraft()
-        ###########
-        #Create time vector (10 days centered period) corresponding to the time period where the aircraft data are available
-        ini10d_period = np.max([np.where(time_10d>=xa_aircraft.date.data[0])[0][0]-1,
-                                np.where(time_10d>=time_period_ini)[0][0]])
-        fin10d_period = np.min([np.where(time_10d<=xa_aircraft.date.data[-1])[0][-1]+1,
-                                np.where(time_10d<=time_period_fin)[0][-1]+1])
-        time_10d_period = time_10d[ini10d_period:fin10d_period]
-        # Convert time vectors (of both aircraft data and 10 days centered period) into float in order to interpolate
-        time_10d_period_float = np.array([np.array([time_10d_period[i]], dtype='datetime64[s]').astype("float")[0] for i in np.arange(len(time_10d_period))])
-        time_aircraft_float = np.array(xa_aircraft.date.data[:], dtype='datetime64[s]').astype("float")
-
-        # Interpolate (linear) sea ice concentration between aircraft data times
-        Ai_period_10d = np.interp(time_10d_period_float,time_aircraft_float,xa_aircraft.Ai)
-
-        ###########
-        #Create time vector (hourly) corresponding to the time period where the aircraft data are available
-        inih_period = np.max([np.where(time_h>=xa_aircraft.date.data[0])[0][0],#-1
-                                np.where(time_h>=time_period_ini)[0][0]])
-        finh_period = np.min([np.where(time_h<=xa_aircraft.date.data[-1])[0][-1]+1,
-                                 np.where(time_h<=time_period_fin)[0][-1]+1])
-        time_h_period = time_h[inih_period:finh_period]
-        # Convert time vectors (of both aircraft data and hourly corresponding vector) into float in order to interpolate
-        time_h_aircraft_float = np.array([np.array([time_h_period[i]], dtype='datetime64[s]').astype("float")[0] for i in np.arange(len(time_h_period))])
-
-        # Interpolate (linear) sea ice concentration between aircraft data times
-        Ai_period_h = np.interp(time_h_aircraft_float,time_aircraft_float,xa_aircraft.Ai)
-        #
-        ini10d = ini10d_period
-        fin10d = fin10d_period
-        inih = inih_period
-        finh = finh_period
+        # Call of "Interp_Ai_Aircraft" function in order to read and interpolate ice fraction from aircraft and to ajust time vectors to the aicraft data time range.
+        (Ai_period_h, Ai_period_10d, 
+        time_10d_period, time_h_period, 
+        ini10d, fin10d, 
+        inih, finh) = Interp_Ai_from_Aircraft.Interp_Ai_Aircraft(time_h=time_h,
+                                                                time_10d=time_10d,
+                                                                time_period_ini=time_period_ini,
+                                                                time_period_fin=time_period_fin)
     if time_period == 'Entire':
         ini10d = np.where(time_10d>=time_period_ini)[0][0]
         fin10d = np.where(time_10d<=time_period_fin)[0][-1]+1
         inih = np.where(time_h>=time_period_ini)[0][0]
         finh = np.where(time_h<=time_period_fin)[0][-1]+1
 
-
-
-
-
-
-
-
-
-
-
-
-#    substract_skin_drag = 'water'
-#    substract_skin_drag = None
-    #z0_func = Z0(u=U_mod,ustar=ustar,psi=psi_func[0],z=z)
     z0_func = Z0(method='obs',u=U_eff,ustar=ustar,psi=psi_func[0],z=z)
     cdn10_func = CDN(z0=z0_func,z=10.)
     if time_period == 'Aero_Summer':
