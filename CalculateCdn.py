@@ -24,11 +24,11 @@ def CalculateCdnSheeba(site=None,time_period=None,vmask=None,sub_CDN_skin=None):
         nlev = xarr.level.data.max()
         z = xarr.z.data
         #
-        P = np.tile(xarr.Press.data*1.E2,(nlev,1)).transpose()
-        #P = np.tile(xarr.Press.data,(nlev,1)).transpose()
+        #P = np.tile(xarr.Press.data*1.E2,(nlev,1)).transpose()
+        P = np.tile(xarr.Press.data,(nlev,1)).transpose()
         #Do we compensate the pressure between different mast levels? Here it is constant.
-        rho = P/(287.058 *(xarr.T.data+K0))
-        #rho = RHO(P=P,T=xarr.T.data+K0,q=xarr.q.data*1.E-3)
+        #rho = P/(287.058 *(xarr.T.data+K0))
+        rho = RHO(P=P,T=xarr.T.data+K0,q=xarr.q.data*1.E-3)
         #
         ustar = xarr.ustar.data
         #
@@ -61,8 +61,8 @@ def CalculateCdnSheeba(site=None,time_period=None,vmask=None,sub_CDN_skin=None):
         tau = xarr.uflux.data
         q = Q(P=xarr.P.data*1.E2,rh=xarr.RH_ice.data,T=xarr.T.data+K0)
         # Check where is measured the pressure P?
-        rho = xarr.P.data*1.E2 / (287.058 *(xarr.T.data+K0))
-        #rho = RHO(P=xarr.P.data*1.E2,T=xarr.T.data+K0,q=q)
+        #rho = xarr.P.data*1.E2 / (287.058 *(xarr.T.data+K0))
+        rho = RHO(P=xarr.P.data*1.E2,T=xarr.T.data+K0,q=q)
         ustar = (tau / rho)**0.5
         #ustar = (xarr.u_v.data**2+xarr.u_w.data**2)**0.25
         #
