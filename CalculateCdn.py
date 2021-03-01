@@ -397,47 +397,26 @@ def CalculateCdnSheeba(site=None,time_period='Entire',vmask=[],sub_CDN_skin=None
     ds=ds.assign_coords(time_h=time_vect)
 
     if diag == True:
-        z = ma.masked_where(mask==1,z)
-        ustar = ma.masked_where(mask==1,ustar)
-        T = ma.masked_where(mask==1,T)
-        P = ma.masked_where(mask==1,P)
-        rh = ma.masked_where(mask==1,rh)
-        U_mod = ma.masked_where(mask==1,U_mod)
-        U_eff = ma.masked_where(mask==1,U_eff)
-        z0 = ma.masked_where(mask==1,z0)
-        q = ma.masked_where(mask==1,q)
-        theta = ma.masked_where(mask==1,theta)
-        thetav = ma.masked_where(mask==1,thetav)
-        wthv = ma.masked_where(mask==1,wthv)
-        if site == 'Tower': 
-            array = xr.DataArray(z[inih:finh],dims=('time_h','height'),attrs={'long_name': 'z'})
-            ds['z'] = array
+        return (ds, 
+                cdn_h_period,
+                Ai_period_h,
+                ma.masked_where(mask==1,z)[inih:finh],
+                ma.masked_where(mask==1,ustar)[inih:finh],
+                ma.masked_where(mask==1,T)[inih:finh],
+                ma.masked_where(mask==1,P)[inih:finh],
+                ma.masked_where(mask==1,rh)[inih:finh],
+                ma.masked_where(mask==1,U_mod)[inih:finh],
+                ma.masked_where(mask==1,U_eff)[inih:finh],
+                ma.masked_where(mask==1,z0)[inih:finh],
+                ma.masked_where(mask==1,q)[inih:finh],
+                ma.masked_where(mask==1,theta)[inih:finh],
+                ma.masked_where(mask==1,thetav)[inih:finh],
+                ma.masked_where(mask==1,wthv)[inih:finh],
 
-            array = xr.DataArray(ustar[inih:finh],dims=('time_h','height'),attrs={'long_name': 'ustar'})
-            ds['ustar'] = array
-
-        else:
-            ds['z'] = xr.DataArray(z[inih:finh],dims=('time_h'))
-            ds['ustar'] = xr.DataArray(ustar[inih:finh],dims=('time_h'))
-            ds['T'] = xr.DataArray(T[inih:finh],dims=('time_h'))
-            ds['P'] = xr.DataArray(P[inih:finh],dims=('time_h'))
-            ds['rh'] = xr.DataArray(rh[inih:finh],dims=('time_h'))
-            ds['U_mod'] = xr.DataArray(U_mod[inih:finh],dims=('time_h'))
-            ds['U_eff'] = xr.DataArray(U_eff[inih:finh],dims=('time_h'))
-            ds['z0'] = xr.DataArray(z0[inih:finh],dims=('time_h'))
-            ds['q'] = xr.DataArray(q[inih:finh],dims=('time_h'))
-            ds['theta'] = xr.DataArray(theta[inih:finh],dims=('time_h'))
-            ds['thetav'] = xr.DataArray(thetav[inih:finh],dims=('time_h'))
-            ds['wthv'] = xr.DataArray(wthv[inih:finh],dims=('time_h'))
-            ds['L'] = xr.DataArray(L[inih:finh],dims=('time_h'))
-            ds['zeta'] = xr.DataArray(zeta[inih:finh],dims=('time_h'))
-            ds['psiM'] = xr.DataArray(psi[0][inih:finh],dims=('time_h'))
-            #ds[''] = xr.DataArray([inih:finh],dims=('time_h'))
-
-
-
-
-        return ds, cdn_h_period, Ai_period_h, z[inih:finh], ustar[inih:finh], T[inih:finh], P[inih:finh], rh[inih:finh], wthv[inih:finh], U_mod[inih:finh], 
+                L[inih:finh],
+                zeta[inih:finh],
+                psi[0][inih:finh],
+                )
     elif diag== False:
         return ds
 
