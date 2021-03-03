@@ -80,9 +80,13 @@ def CalculateCdnSheeba(site=None,time_period='Entire',vmask=[],sub_CDN_skin=None
         thetav = Thetav(theta,q)
         rho = RHO(P=P,T=T,q=q)
         cp=1004
+        # Create unp.uarray because the initial measured variables are wth and wq
         wth = H/(rho*cp)
+        wth = unp.uarray(unp.nominal_values(wth),unp.std_devs(wth))
         lv = LV(T=T)
+        # Create unp.uarray because the initial measured variables are wth and wq
         wq = LE/(rho*lv)
+        wq = unp.uarray(unp.nominal_values(wq),unp.std_devs(wq))
         wthv = wth*(1.+0.51*q)+0.51*theta*wq
         #
     elif site[0] in sites:  
@@ -397,26 +401,57 @@ def CalculateCdnSheeba(site=None,time_period='Entire',vmask=[],sub_CDN_skin=None
     ds=ds.assign_coords(time_h=time_vect)
 
     if diag == True:
-        return (ds, 
-                cdn_h_period,
-                Ai_period_h,
-                ma.masked_where(mask==1,z)[inih:finh],
-                ma.masked_where(mask==1,ustar)[inih:finh],
-                ma.masked_where(mask==1,T)[inih:finh],
-                ma.masked_where(mask==1,P)[inih:finh],
-                ma.masked_where(mask==1,rh)[inih:finh],
-                ma.masked_where(mask==1,U_mod)[inih:finh],
-                ma.masked_where(mask==1,U_eff)[inih:finh],
-                ma.masked_where(mask==1,z0)[inih:finh],
-                ma.masked_where(mask==1,q)[inih:finh],
-                ma.masked_where(mask==1,theta)[inih:finh],
-                ma.masked_where(mask==1,thetav)[inih:finh],
-                ma.masked_where(mask==1,wthv)[inih:finh],
+        if site == 'Tower':
+            return (ds, 
+                    cdn_h_period,
+                    Ai_period_h,
 
-                L[inih:finh],
-                zeta[inih:finh],
-                psi[0][inih:finh],
-                )
+                    ma.masked_where(mask==1,z)[inih:finh],
+                    ma.masked_where(mask==1,ustar)[inih:finh],
+                    ma.masked_where(mask==1,T)[inih:finh],
+                    ma.masked_where(mask==1,P)[inih:finh],
+                    ma.masked_where(mask==1,rh)[inih:finh],
+                    ma.masked_where(mask==1,U_mod)[inih:finh],
+                    ma.masked_where(mask==1,U_eff)[inih:finh],
+                    ma.masked_where(mask==1,z0)[inih:finh],
+                    ma.masked_where(mask==1,q)[inih:finh],
+                    ma.masked_where(mask==1,theta)[inih:finh],
+                    ma.masked_where(mask==1,thetav)[inih:finh],
+                    ma.masked_where(mask==1,wthv)[inih:finh],
+                    #
+                    ma.masked_where(mask==1,wth)[inih:finh],
+                    ma.masked_where(mask==1,wq)[inih:finh],
+                    ma.masked_where(mask==1,H)[inih:finh],
+                    #
+
+                    L[inih:finh],
+                    zeta[inih:finh],
+                    psi[0][inih:finh],
+                    )
+        else:
+            return (ds, 
+                    cdn_h_period,
+                    Ai_period_h,
+
+                    ma.masked_where(mask==1,z)[inih:finh],
+                    ma.masked_where(mask==1,ustar)[inih:finh],
+                    ma.masked_where(mask==1,T)[inih:finh],
+                    ma.masked_where(mask==1,P)[inih:finh],
+                    ma.masked_where(mask==1,rh)[inih:finh],
+                    ma.masked_where(mask==1,U_mod)[inih:finh],
+                    ma.masked_where(mask==1,U_eff)[inih:finh],
+                    ma.masked_where(mask==1,z0)[inih:finh],
+                    ma.masked_where(mask==1,q)[inih:finh],
+                    ma.masked_where(mask==1,theta)[inih:finh],
+                    ma.masked_where(mask==1,thetav)[inih:finh],
+                    #
+                    ma.masked_where(mask==1,wthv)[inih:finh],
+                    #
+
+                    L[inih:finh],
+                    zeta[inih:finh],
+                    psi[0][inih:finh],
+                    )
     elif diag== False:
         return ds
 
